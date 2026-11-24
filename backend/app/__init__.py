@@ -22,20 +22,10 @@ def create_app(config_name=None):
     # Ensure upload folder exists (absolute path guaranteed by config)
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-    # CORS — accept configured frontend URLs, localhost, Vercel, and Render domains
+    # CORS — accept configured frontend URLs, localhost, Vercel (*.vercel.app), and Render (*.onrender.com)
+    import re
     frontend_env = app.config.get('FRONTEND_URL', 'http://localhost:5173')
-    # Support multiple comma-separated URLs or wildcard
     raw_origins = [url.strip().rstrip('/') for url in frontend_env.split(',') if url.strip()]
-    allowed_origins = []
-    for origin in raw_origins:
-        allowed_origins.append(origin)
-        if 'localhost' in origin:
-            allowed_origins.append(origin.replace('localhost', '127.0.0.1'))
-        elif '127.0.0.1' in origin:
-            allowed_origins.append(origin.replace('127.0.0.1', 'localhost'))
-
-    # Regex for Vercel deployments (*.vercel.app), Render (*.onrender.com), and local dev
-    origin_regex = r"^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$|^https:\/\/.*\.vercel\.app$|^https:\/\/.*\.onrender\.com$"
 
     # If FRONTEND_URL is set to '*', allow all origins
     if '*' in raw_origins:
@@ -45,10 +35,17 @@ def create_app(config_name=None):
              allow_headers=['Content-Type', 'Authorization'],
              methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
     else:
-        import re as _re
+        allowed_origins = [
+            re.compile(r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"),
+            re.compile(r"^https://.*\.vercel\.app$"),
+            re.compile(r"^https://.*\.onrender\.com$")
+        ]
+        for origin in raw_origins:
+            if origin not in allowed_origins:
+                allowed_origins.append(origin)
+
         CORS(app,
              resources={r"/api/*": {"origins": allowed_origins}},
-             origin_regex=origin_regex,
              supports_credentials=True,
              allow_headers=['Content-Type', 'Authorization'],
              methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
