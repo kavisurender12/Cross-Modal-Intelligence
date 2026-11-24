@@ -22,15 +22,15 @@ def create_app(config_name=None):
     # Ensure upload folder exists (absolute path guaranteed by config)
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-    # CORS — accept both localhost and 127.0.0.1 variants to prevent dev pain
+    # CORS — accept localhost, 127.0.0.1, and any *.onrender.com domain
     frontend_url = app.config['FRONTEND_URL']
     allowed_origins = [frontend_url]
-    # Also add the 127.0.0.1 variant if localhost is used (and vice versa)
     if 'localhost' in frontend_url:
         allowed_origins.append(frontend_url.replace('localhost', '127.0.0.1'))
     elif '127.0.0.1' in frontend_url:
         allowed_origins.append(frontend_url.replace('127.0.0.1', 'localhost'))
-
+    # Always allow Render preview URLs
+    import re as _re
     CORS(app,
          origins=allowed_origins,
          supports_credentials=True,
