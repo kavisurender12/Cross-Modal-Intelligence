@@ -20,7 +20,9 @@ export default function LoginPage() {
       toast.success('Welcome back!')
       navigate('/dashboard')
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Invalid credentials')
+      const serverMsg = err.response?.data?.message || err.response?.data?.error
+      const networkMsg = err.code === 'ERR_NETWORK' ? 'Network error: Cannot connect to Render backend' : null
+      toast.error(serverMsg || networkMsg || err.message || 'Invalid credentials')
     } finally { setLoading(false) }
   }
 

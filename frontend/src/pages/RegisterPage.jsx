@@ -24,7 +24,9 @@ export default function RegisterPage() {
       toast.success('Account created!')
       navigate('/dashboard')
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Registration failed')
+      const serverMsg = err.response?.data?.message || err.response?.data?.error
+      const networkMsg = err.code === 'ERR_NETWORK' ? 'Network error: Cannot connect to Render backend' : null
+      toast.error(serverMsg || networkMsg || err.message || 'Registration failed')
     } finally { setLoading(false) }
   }
 

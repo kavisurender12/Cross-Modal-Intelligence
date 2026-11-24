@@ -26,8 +26,8 @@ api.interceptors.response.use(
   response => response,
   error => {
     if (error.code === 'ERR_NETWORK' || error.code === 'ECONNREFUSED') {
-      // Backend not running
-      toast.error('Cannot reach the server. Make sure the backend is running on port 5000.', { id: 'network-error', duration: 6000 })
+      // Backend unreachable or CORS blocked
+      toast.error('Cannot reach backend server. Please verify Render backend is live and VITE_API_URL is configured.', { id: 'network-error', duration: 6000 })
     } else if (error.response?.status === 401) {
       // Token expired — clear and redirect
       localStorage.removeItem('token')
@@ -36,7 +36,8 @@ api.interceptors.response.use(
         window.location.href = '/login'
       }
     } else if (error.response?.status === 503) {
-      toast.error('Database connection failed. Make sure MongoDB is running.', { id: 'db-error', duration: 6000 })
+      const msg = error.response?.data?.message || 'Database connection failed. Make sure MongoDB Atlas is running and MONGO_URI is set on Render.'
+      toast.error(msg, { id: 'db-error', duration: 6000 })
     }
     return Promise.reject(error)
   }
